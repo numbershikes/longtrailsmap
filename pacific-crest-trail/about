@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-128007478-5"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'UA-128007478-5');
+        </script>
+
+		<meta charset='utf-8' />
+		<title>Longtrailsmap: Pacific Crest Trail</title>
+		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        <link rel="icon" type="image/png" href="http://www.longtrailsmap.net/favicon.png">    
+        
+        <style>
+            body {
+                background-color: #F6F6F6;
+            }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    
+    <body>
+        <p>
+            <h2>Welcome to the PCT on <a target='_blank' rel='noopener noreferrer' href='http://www.longtrailsmap.net'>www.longtrailsmap.net</a>!<br></h2>
+            Longtrailsmap.net: PCT would like to thank the following:<br>
+            <ul>
+                <li><a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>The Mapbox Community Program</a> for their generous sponsorship of the map server costs associated with this site.</li>
+                <li><a target='_blank' rel='noopener noreferrer' href='https://www.pctmap.net'>The Halfmile Team</a> for providing the GPS data for the trail.</li>
+            </ul>
+            Send questions, comments, praise, and blame to: <a href='mailto:longtrailsnetwork+pct@gmail.com'>longtrailsnetwork+pct@gmail.com</a><br>
+        </p>
+        
+        <div id="whatsnew"></div>
+        
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $("#whatsnew").load("/../common/whats-new-list.html");
+            });
+        </script>
+    </body>
+</html>

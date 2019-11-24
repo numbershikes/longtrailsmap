@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-128007478-5"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'UA-128007478-5');
+        </script>
+
+		<meta charset='utf-8' />
+		<title>longtrailsmap.net</title>
+        <link rel="icon" type="image/png" href="http://www.longtrailsmap.net/favicon.png">    
+    </head>
+    <body>
+        Longtrailsmap.net FAQ<br>
+        <br>
+        <b>Q: Can I have a copy of the GPS file for a particular trail?</b><br>
+        <br>
+        A: For routes where the license permits redistribution, download links are on the 'To Do' list. However, some GPS data has been made available to Longtrailsmap.net on the condition that it be made available only in online map form, and not available for direct download. Note that most of the GPS info on Longtrailsmap.net is crowdsourced (and so precision is unconfirmed), can be several years out of date, and, sometimes, is slightly adjusted for presentation purposes. For these and other reasons, it is not suitable for use in navigation, and should be used only for entertainment purposes.<br>
+        <br>
+        <b>Q: How do you decide what trails to include on the map?</b><br>
+        <br>
+        A: The following criteria are general guidelines, though there are some exceptions.<br>
+        <ul>
+            <li>The trail...</li>
+            <ul>
+                <li>...is at least 50 miles long.</li>
+                <li>...involves minimal road walks.</li>
+                <li>...is mostly completed.</li>
+                <li>...is mostly in wild areas with natural earth for trail surface.</li>
+                <li>...is primarily a hiking trail and is designed for foot traffic.</li>
+                <li>...can be completed without substantial mountaineering skills or pack rafting.</li>
+            </ul>
+        </ul>
+        <br>    
+        <b>Q: Where do you get the GPS data for the map?</b><br>
+        <br>
+        A: Almost all of the paths shown on the map come from public data accessible from links on the first page (or two) of a Google search.<br>
+        <ul>
+            <li>Some good sources for lists of existing trails:</li>
+            <ul>
+                <li>American Long Distance Hiking Association - West (www.aldhawest.org/page-18161)</li>
+                <li>Wikipedia: Long Distance Trails in the United States</li>
+                <li>NRTDatabase.org</li>
+                <li>Traildino</li>
+            </ul>
+            <br>
+            <li>Some good sources for GPS data:</li>
+            <ul>
+                <li>Traildino</li>
+                <li>Caltopo - Google "<trail name> caltopo"</li>
+                <li>Hikingproject.com </li>
+                <li>Hiking.waymarkedtrails.org </li>
+                <li>Gaiagps.com </li>
+                <li>Wikiloc </li>
+                <li>The individual sites of the agencies that steward the trails. </li>
+                <li>www.outdooractive.com (Europe)</li>
+            </ul>
+        </ul>
+        <br>
+        <b>Q: What technology do you use in developing the site?</b><br>
+        <br>
+        A: The site itself is simple handwritten static dhtml served by S3. The map is hosted by Mapbox.com, and uses Mapbox's proprietary tilesets. API access is handled through Mapbox GL JS. QGIS, JOSM, Caltopo.com, and GPSVisualizer.com are the main tools used to process the GPS data for presentation.<br>
+        <br>
+        <div id="disqus_thread"></div>
+
+        <script>
+            /**
+            *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+            *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+            /*
+            var disqus_config = function () {
+            this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            };
+            */
+            (function() { // DON'T EDIT BELOW THIS LINE
+                var d = document, s = d.createElement('script');
+                s.src = 'https://longtrailsmap.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+
+        <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
