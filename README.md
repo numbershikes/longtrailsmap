@@ -2,3 +2,5 @@
 Slippy maps of long distance hiking trails around the world.
 
 http://www.longtrailsmap.net
+
+Licensed under GPL3.
