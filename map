@@ -61,11 +61,14 @@
 			<div class='about-button'>
 				<button onclick="window.location.href='/about.html'">About</button>
 			</div>
-			<div class='pct-button'>
-				<button onclick="window.location.href='/pacific-crest-trail/map'">PCT</button>
-			</div>
+            <div class='at-button'>
+                <button onclick="window.location.href='/appalachian-trail/map'">AT</button>
+            </div>
 			<div class='azt-button'>
 				<button onclick="window.location.href='/arizona-trail/map'">AZT</button>
+			</div>
+			<div class='pct-button'>
+				<button onclick="window.location.href='/pacific-crest-trail/map'">PCT</button>
 			</div>
             
 			<script>
