@@ -103,7 +103,7 @@
                     
                     map.on('load', function () {
                         var helloPopup = new mapboxgl.Popup({closeButton: true, closeOnClick: true, anchor: 'center'})
-                            .setHTML("Welcome to longtrailsmap.net!<br>Click the 'About' button in the upper lefthand corner for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site!")
+				    .setHTML("Welcome to longtrailsmap.net!<br>Click the 'About' button in the upper lefthand corner for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site! <a target='_blank' rel='noopen noreferrer' href='https://github.com/numbers007/longtrailsmap'>github.com/numbers007/longtrailsmap</a>")
                             .setLngLat([-96.947, 39.55]) // .setLngLat([-117.073,46.640])
                             .addTo(map);
 

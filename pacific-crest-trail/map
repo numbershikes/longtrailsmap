@@ -91,7 +91,7 @@
 	</head>
 	<body>
         <div id="dialog" title="Add Location" style="display:none">
-          <p>Please describe this location:</p>          
+          <p>Enter a description for this location.<br><font size=2><br>Please note that LTM does not knowingly publish data regarding non-<a href='https://lnt.org/why/7-principles/' target='_blank' rel='noopener noreferrer'>LNT</a> campsites and fire rings, unofficial side trails, and other items we consider inconsistent with responsible use.</font></p>
           <input type="text" id="addLocationDescription" name="name" required minlength="10" maxlength="75" size="25">
           <br>
           <br>
@@ -250,7 +250,7 @@
                         $("#search_go").click();                                                    // show search db.
 
                         var helloPopup = new mapboxgl.Popup({closeButton: true, closeOnClick: true, anchor: 'center'})
-                            .setHTML("Welcome to the Pacific Crest Trail on <a target='_blank' rel='noopener noreferrer' href='http://www.longtrailsmap.net'>www.longtrailsmap.net</a>!<br>Thanks to the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site!")
+                            .setHTML("Welcome to the Pacific Crest Trail on <a target='_blank' rel='noopener noreferrer' href='http://www.longtrailsmap.net'>www.longtrailsmap.net</a>!<br>Thanks to the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated<br>with this site, and also to the amazing <a href='https://www.pctmap.net/' target='_blank' rel='noopener noreferrer'>Halfmile Media</a> project.<br><a href='https://github.com/numbers007/longtrailsmap' target='_blank' rel='noopener noreferrer'>LTM is on GitHub!</a>")
                             .setLngLat([-120.183135, 39.052539])
                             //.addTo(map)
                             ;
