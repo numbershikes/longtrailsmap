@@ -4,86 +4,207 @@
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-128007478-5"></script>
         <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
 
-          gtag('config', 'UA-128007478-5');
+            gtag('config', 'UA-128007478-5');
         </script>
 
 		<meta charset='utf-8' />
-		<title>longtrailsmap.net</title>
-		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-        <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
-		<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
-		<style>
-			body { margin:0; padding:0; }
-
-			#map {
-				z-index: -1;
-				display: inline-block;
-				position: absolute;
-				top: 0;
-				bottom: 0;
-				width: 100%;
-			}
-
-			#about-button {
-				z-index: 1;
-				position: relative;
-				left: 10px;
-				top: 10px;
-			}
-            
-            #pct-button {
-				z-index: 1;
-				position: relative;
-				left: 10px;
-				top: 20px;
-			}
-
-            #azt-button {
-				z-index: 1;
-				position: relative;
-				left: 10px;
-				top: 20px;
-			}
-
-		</style>
-        
+		<title>Longtrailsmap: Arizona Trail</title>
         <link rel="icon" type="image/png" href="http://www.longtrailsmap.net/favicon.png">    
-	</head>
-    
-	<body>
-		<div id="container">
-			<div id='map'></div>
-			<div class='about-button'>
-				<button onclick="window.location.href='/about.html'">About</button>
-			</div>
-            <div class='at-button'>
-                <button onclick="window.location.href='/appalachian-trail/map'">AT</button>
-            </div>
-			<div class='azt-button'>
-				<button onclick="window.location.href='/arizona-trail/map'">AZT</button>
-			</div>
-			<div class='pct-button'>
-				<button onclick="window.location.href='/pacific-crest-trail/map'">PCT</button>
-			</div>
+		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.519.0.min.js"></script>
+        <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+
+        <script src="/../common/ResizeSensor.js"></script>
+        <script src="/../common/ElementQueries.js"></script>
+        
+		<link rel='stylesheet' href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css">
+        
+		<style>
+            * {
+                box-sizing: border-box;
+            }
             
-			<script>
-                var vars = [];
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            #container {
+                display: flex; 
+                height: 100vh;
+                width: 100%;
+            }
+            
+            #sidebar-container {
+                order: 1;
+                height: 100%;
+                flex-basis: 25%;
+                overflow-y: scroll;
+            }
+            
+            #search-text, #search_go {
+                margin: 4px;
+            }
+            
+            #search-text {
+                width: 80%;
+            }
+            
+            #map-container {
+                order: 2;
+                height: 100%;
+                flex-basis: 75%;
+            }
+            
+            #map, #map-buttons {
+                position: absolute;
+                height: 100vh;
+                width: 75%;
+            }
+            
+            #map {
+                z-index: 5;
+            }
+            
+            #map-buttons {
+                z-index: 6;
+                margin: 4px;
+                height: 1px;
+                width: 1px;            
+            }
+            
+            .marker {
+                background-image: url('http://www.longtrailsmap.net/circle.svg');
+                background-size: cover;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+		</style>
+	</head>
+	<body>
+        <div id="container">
+            <div id="sidebar-container">
+                <a href='/appalachian-trail/map'>Appalachian Trail Page</a><br>
+                <a href='/arizona-trail/map'>Arizona Trail Page</a><br>
+                <a href='/pacific-crest-trail/map'>Pacific Crest Trail Page</a><br>
+                <br>
+                <a href='/whatsnew.html'>What's New?</a><br>
+                <a href='/about.html'>About LongTrailMap</a><br>
+                <br>
+                <input id="search-text" type="search" name="wpt_search" placeholder="Search">
+                <button type="button" id="search_go">Go</button>
+            </div>
+            <div id="map-container">
+                <div id="map-buttons">
+                    <button type="button" id="sidebar-btn" class="map-buttons">Sidebar</button>
+                    <pre id='info'></pre>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var map;            
+            var vars = [];
+            var markers = [];
+            var updateUrl = false;
+            
+            $.getJSON("http://www.longtrailsmap.net/ltm-trails.geojson", function( data ) {
+                markers = data;
+            })
+            //.fail(function() { alert("Error: Unable to load search."); });
+            .fail( function(d, textStatus, error) {
+                console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+            });
+
+            function searchResultClick(lon, lat, z, short_name) {                
+                updateUrl = false;                                                          // don't update the url on moveend event w/ latlon, b/c url should show 'name=[search result name]'.
+                map.flyTo({center: [lon, lat], zoom: z, speed: 0.75, curve: 1.5});
+                window.history.pushState('page', '', '?name='+short_name);
+            };
+
+            $.get("/../common/vars.json", function (vars) {
+                mapboxgl.accessToken = vars.mapbox;
                 
-                $.get("/../common/vars.json", function (vars) {
-                    mapboxgl.accessToken = vars.mapbox;
+                $(document).ready(function(){
+                    // Mapbox GL JS does not automatically resize & refresh map when size of container changes. Using ResizeSensor to fix. https://stackoverflow.com/a/19418065 
+                    new ResizeSensor( $('#map'), function() {console.log('map container resized, calling map.resize() via ResizeSensor.'); map.resize();});
+
+                    $('#sidebar-btn').click(function () {
+                        if($('#sidebar-container').css('display') !== 'none') {
+                            $('#sidebar-container').css('display', 'none');
+                            $('#map-container').css('width', '100%');
+                            $('#map').css('width', '100%');                    
+                        } else {
+                            $('#sidebar-container').css('display', 'block');
+                            $('#map-container').css('width', '80%');
+                            $('#map').css('width', '80%');                                        
+                        }
+                    });
                     
-                    var map = new mapboxgl.Map({
+                    $("#search-text").keyup(function(event) {
+                        if (event.keyCode === 13) {
+                            $("#search_go").click();
+                        }
+                    });                
+                    
+                    $("#addLocationDescription").keyup(function(event) {
+                        if (event.keyCode === 13) {
+                            $("#btnAddLocationSubmit").click();
+                        }
+                    });                
+
+                    $('#search_go').click(function(){
+                        var results = [];
+                        var items = [];
+                        
+                        $('#results_list').remove();
+
+                        results = markers.features.filter(function(item) { 
+                            return item.properties.searchString.includes($('#search-text').val().toLowerCase());
+                        });
+
+                        results.sort(function(a, b) {
+                            var textA = a.properties.title.toLowerCase();
+                            var textB = b.properties.title.toLowerCase();
+                            return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                        });
+                        
+                        $.each(results, function( key, val) {
+                            var f = `searchResultClick(${val.geometry.coordinates[0]}, ${val.geometry.coordinates[1]}, ${val.properties.zoom}, \"${val.properties.shortName}\")`;
+                            items.push( "<li><a href='#' onClick=\'"+f+"\'>" + val.properties.title + "</a></li>" );
+                        });
+
+                        $("<ul/>", {
+                            "id": "results_list",
+                            "class": "my-new-list",
+                            html: items.join("")
+                        }).appendTo("#sidebar-container");                        
+                    });
+                        
+                    updateUrl = false;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const paramName = urlParams.get('name');
+                    const paramLatLon = urlParams.get('latlon');
+                    const paramZoom = urlParams.get('zoom');
+                        
+                    map = new mapboxgl.Map({
                         container: 'map',
                         style: 'mapbox://styles/user9984/cjsfcrcsu2y791fp9lnpjcjkz',                    // "Outdoors (Blank)"
+                        //style: 'mapbox://styles/mapbox/satellite-v9',                                 // satellite
                         center: [-96.947, 39.55],
-                        zoom: 3.8
-                        // , minZoom: 0,
-                        // maxZoom: 9
+                        zoom: 3.5,
+                        minZoom: 0,
+                        maxZoom: 22
                     });
 
                     var nav = new mapboxgl.NavigationControl();
@@ -104,23 +225,79 @@
                     map.addControl(scale);
                     // scale.setUnit('metric');
                     
+                    // show lnglat of cursor, update whenever cursor moves.
+                    map.on('mousemove', function (e) {
+                        document.getElementById('info').innerHTML = e.lngLat.lat.toFixed(5) + ", " + e.lngLat.lng.toFixed(5);
+                    });
+                        
+                    map.on('moveend', function (e) {
+                        var center = map.getCenter();
+                        var zoom = map.getZoom();
+                        
+                        if(updateUrl == true) {
+                            window.history.pushState('page', '', '?latlon=(' + center.lat.toFixed(5) + ',' + center.lng.toFixed(5) +')&zoom=' + zoom.toFixed(2));
+                        }
+
+                        updateUrl = true;
+                    });
+                    
                     map.on('load', function () {
+                        $("#search_go").click();                                                    // show search db.
+                        
                         var helloPopup = new mapboxgl.Popup({closeButton: true, closeOnClick: true, anchor: 'center'})
-				    .setHTML("Welcome to longtrailsmap.net!<br>Click the 'About' button in the upper lefthand corner for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site! <a target='_blank' rel='noopen noreferrer' href='https://github.com/numbers007/longtrailsmap'>github.com/numbers007/longtrailsmap</a>")
-                            .setLngLat([-96.947, 39.55]) // .setLngLat([-117.073,46.640])
-                            .addTo(map);
+                            .setHTML("Welcome to longtrailsmap.net!<br>Click the 'About' button in the upper lefthand corner for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site! <a target='_blank' rel='noopen noreferrer' href='https://github.com/numbers007/longtrailsmap'>github.com/numbers007/longtrailsmap</a>")
+                            .setLngLat([-96.947, 39.55])
+                            //.addTo(map)
+                            ;
+
+                        var trailNamePopup = new mapboxgl.Popup({ offset: 15, closeButton: false });
+
+                        var addLocationLat = "";
+                        var addLocationLon = "";
+                        
+                        map.doubleClickZoom.disable();
+                        
+                        if(window.location.search == "") {
+                            helloPopup.addTo(map);
+                        } else {
+                            var results = [];
+                            
+                            if(paramName !== "" && paramName !== null) {
+                                results = markers.features.filter(function(item) { 
+                                    return item.properties.searchString.includes(paramName);
+                                });
+
+                                var lon = results[0].geometry.coordinates[0];
+                                var lat = results[0].geometry.coordinates[1];
+                                var z = results[0].properties.zoom;
+                                    
+                                updateUrl = false;
+                                map.flyTo({center: [lon, lat], zoom:z, speed: 0.5, curve: 1.82});
+
+                            } else {
+                                if(paramLatLon !== null && paramZoom !== null) {
+                                    const lat = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[0]);
+                                    const lon = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[1]);
+                                    
+                                    map.flyTo({center: [lon, lat], zoom: parseFloat(paramZoom), speed:0.5, curve: 1.82});
+                                } else {
+                                    if(paramLatLon != null) {
+                                        const lat = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[0]);
+                                        const lon = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[1]);
+                                        
+                                        map.flyTo({center: [lon, lat], zoom: 16, speed:0.5, curve: 1.82});
+                                    } else {
+                                        if(paramZoom !== null) {
+                                            map.zoomTo(paramZoom);
+                                        }
+                                    }
+                                }
+                            }
+                        };
 
                         map.on('dragstart', function() {
                             helloPopup.remove();
                         });
-                        
-                        var trailNamePopup = new mapboxgl.Popup({ offset: 15, closeButton: false });
-
-                        map.on('click', 'pacific-crest-trail', function () {
-                            // map.getCanvas().style.cursor = 'pointer';
-                            window.location.href += 'pct';
-                        });
-
 
                         map.addLayer({
                             'id': 'north-umpqua-trail',				            // 'id' is arbitrary
@@ -145,24 +322,22 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'north-umpqua-trail', function() {
                             map.setPaintProperty('north-umpqua-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
                         map.addLayer({
-                            'id': 'big-bend-100',				            // 'id' is arbitrary
+                            'id': 'big-bend-100',
                             'type': 'line',
                             'source': {
                                 'type': 'vector',
-                                'url': 'mapbox://user9984.ck23omv07008u2tml4xivn7wl-9789w'        	    // this s/b a tileset 'map id'. must be an existing resource.
+                                'url': 'mapbox://user9984.ck23omv07008u2tml4xivn7wl-9789w'
                             },
-                            'source-layer': 'big-bend-100',				            // from tileset page.
+                            'source-layer': 'big-bend-100',
                             'layout': {
                                 'visibility': 'visible'
                             },
@@ -178,13 +353,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'big-bend-100', function() {
                             map.setPaintProperty('big-bend-100', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -1938,13 +2111,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bibbulmun-track', function() {
                             map.setPaintProperty('bibbulmun-track', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -1971,13 +2142,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'south-dakota-centennial-trail', function() {
                             map.setPaintProperty('south-dakota-centennial-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2004,13 +2173,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'tahoe-rim-trail', function() {
                             map.setPaintProperty('tahoe-rim-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2037,13 +2204,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'north-country-trail', function() {
                             map.setPaintProperty('north-country-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
                         
 
@@ -2071,13 +2236,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pacific-crest-trail', function() {
                             map.setPaintProperty('pacific-crest-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
                         
 
@@ -2105,13 +2268,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'wonderland-trail', function() {
                             map.setPaintProperty('wonderland-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2139,13 +2300,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'vermont-long-trail', function() {
                             map.setPaintProperty('vermont-long-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2173,13 +2332,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'sheltowee-trace', function() {
                             map.setPaintProperty('sheltowee-trace', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
                         
@@ -2207,51 +2364,12 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pacific-northwest-trail', function() {
                             map.setPaintProperty('pacific-northwest-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
-
-                        
-                        
-    /*
-                        map.addLayer({
-                            'id': 'ozark-trail',
-                            'type': 'line',
-                            'source': {
-                                'type': 'vector',
-                                'url': 'mapbox://user9984.4kamlua8'
-                            },
-                            'source-layer': 'tracks',
-                            'layout': {
-                                'visibility': 'visible'
-                            },
-                            'paint': {
-                                'line-color': '#ff0901',
-                                'line-width': 2
-                            }
-                        });
-                        map.on('mousemove', 'ozark-trail', function(e) {
-                            map.setPaintProperty('ozark-trail', 'line-width', 4);
-            
-                            trailNamePopup.setText('Ozark Trail');
-                            trailNamePopup
-                                .setLngLat(e.lngLat)
-                                .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
-                        });
-                        map.on('mouseleave', 'ozark-trail', function() {
-                            map.setPaintProperty('ozark-trail', 'line-width', 2);
-
-                            trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
-                        });
-    */
-
 
                         map.addLayer({
                             'id': 'ozark-highland-trail',
@@ -2276,13 +2394,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'ozark-highland-trail', function() {
                             map.setPaintProperty('ozark-highland-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
                         
@@ -2310,13 +2426,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'oregon-desert-trail', function() {
                             map.setPaintProperty('oregon-desert-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2344,13 +2458,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'john-muir-trail', function() {
                             map.setPaintProperty('john-muir-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2378,13 +2490,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'idaho-centennial-trail', function() {
                             map.setPaintProperty('idaho-centennial-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2412,13 +2522,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'ice-age-trail', function() {
                             map.setPaintProperty('ice-age-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2446,13 +2554,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'grand-enchantment-trail', function() {
                             map.setPaintProperty('grand-enchantment-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2480,13 +2586,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'hayduke-trail', function() {
                             map.setPaintProperty('hayduke-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2514,13 +2618,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'appalachian-trail', function() {
                             map.setPaintProperty('appalachian-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2548,13 +2650,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'continental-divide-trail', function() {
                             map.setPaintProperty('continental-divide-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2582,13 +2682,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'florida-trail', function() {
                             map.setPaintProperty('florida-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2616,13 +2714,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'buckeye-trail', function() {
                             map.setPaintProperty('buckeye-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2650,13 +2746,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'desert-trail', function() {
                             map.setPaintProperty('desert-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2684,13 +2778,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'benton-mackaye-trail', function() {
                             map.setPaintProperty('benton-mackaye-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2718,13 +2810,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'arizona-trail', function() {
                             map.setPaintProperty('arizona-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2752,13 +2842,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'backbone-trail', function() {
                             map.setPaintProperty('backbone-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2786,13 +2874,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'superior-hiking-trail', function() {
                             map.setPaintProperty('superior-hiking-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2820,13 +2906,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'baker-trail', function() {
                             map.setPaintProperty('baker-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2854,13 +2938,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'batona-trail', function() {
                             map.setPaintProperty('batona-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2888,13 +2970,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bartram-trail', function() {
                             map.setPaintProperty('bartram-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2922,13 +3002,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'foothills-trail', function() {
                             map.setPaintProperty('foothills-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2956,13 +3034,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'chattooga-trail', function() {
                             map.setPaintProperty('chattooga-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -2990,13 +3066,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'jordan-trail', function() {
                             map.setPaintProperty('jordan-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3024,13 +3098,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pinhoti-trail', function() {
                             map.setPaintProperty('pinhoti-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3058,13 +3130,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'ouachita-trail', function() {
                             map.setPaintProperty('ouachita-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3092,13 +3162,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'northville-placid-trail', function() {
                             map.setPaintProperty('northville-placid-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3126,13 +3194,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'border-route-trail', function() {
                             map.setPaintProperty('border-route-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3160,13 +3226,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'lonestar-trail', function() {
                             map.setPaintProperty('lonestar-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3194,13 +3258,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'long-path', function() {
                             map.setPaintProperty('long-path', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3228,13 +3290,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'new-england-trail-parkshikes', function() {
                             map.setPaintProperty('new-england-trail-parkshikes', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3262,13 +3322,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bay-area-ridge-trail', function() {
                             map.setPaintProperty('bay-area-ridge-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3296,13 +3354,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'boundary-trail', function() {
                             map.setPaintProperty('boundary-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3330,13 +3386,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'great-divide-trail', function() {
                             map.setPaintProperty('great-divide-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3364,13 +3418,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'tuscarora-trail', function() {
                             map.setPaintProperty('tuscarora-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3398,13 +3450,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'uinta-highline-trail', function() {
                             map.setPaintProperty('uinta-highline-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3432,13 +3482,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'condor-trail', function() {
                             map.setPaintProperty('condor-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3466,13 +3514,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'mid-state-trail-pennsylvania', function() {
                             map.setPaintProperty('mid-state-trail-pennsylvania', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3500,13 +3546,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'isle-royale-loop', function() {
                             map.setPaintProperty('isle-royale-loop', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3534,13 +3578,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'mountains-to-sea-trail', function() {
                             map.setPaintProperty('mountains-to-sea-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3568,13 +3610,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'palmetto-trail', function() {
                             map.setPaintProperty('palmetto-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3602,13 +3642,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pct-odt-connector-trail', function() {
                             map.setPaintProperty('pct-odt-connector-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3636,13 +3674,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'metolius-windigo-trail', function() {
                             map.setPaintProperty('metolius-windigo-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3670,13 +3706,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'oregon-coast-trail', function() {
                             map.setPaintProperty('oregon-coast-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3704,13 +3738,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bay-circuit-trail', function() {
                             map.setPaintProperty('bay-circuit-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3738,13 +3770,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'loyalsock-trail', function() {
                             map.setPaintProperty('loyalsock-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3772,13 +3802,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'sierra-high-route', function() {
                             map.setPaintProperty('sierra-high-route', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3806,13 +3834,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'lowest-to-highest', function() {
                             map.setPaintProperty('lowest-to-highest', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3840,13 +3866,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'sky-islands-traverse', function() {
                             map.setPaintProperty('sky-islands-traverse', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3874,13 +3898,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'northern-new-mexico-loop', function() {
                             map.setPaintProperty('northern-new-mexico-loop', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3908,13 +3930,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'across-utah', function() {
                             map.setPaintProperty('across-utah', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3942,13 +3962,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bigfoot-trail', function() {
                             map.setPaintProperty('bigfoot-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -3976,13 +3994,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'california-coastal-trail-norcal-section', function() {
                             map.setPaintProperty('california-coastal-trail-norcal-section', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -4010,13 +4026,11 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pct-dt-socal-connector-trail', function() {
                             map.setPaintProperty('pct-dt-socal-connector-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'visible');
                         });
 
 
@@ -4044,7 +4058,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'gr10', function() {
                             map.setPaintProperty('gr10', 'line-width', 2);
@@ -4077,7 +4090,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'gr11', function() {
                             map.setPaintProperty('gr11', 'line-width', 2);
@@ -4110,7 +4122,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pyrenean-high-route', function() {
                             map.setPaintProperty('pyrenean-high-route', 'line-width', 2);
@@ -4143,7 +4154,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'bruce-trail', function() {
                             map.setPaintProperty('bruce-trail', 'line-width', 2);
@@ -4176,7 +4186,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'western-rim-trail', function() {
                             map.setPaintProperty('western-rim-trail', 'line-width', 2);
@@ -4209,7 +4218,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'canol-trail', function() {
                             map.setPaintProperty('canol-trail', 'line-width', 2);
@@ -4242,7 +4250,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'theodore-solomon-trail', function() {
                             map.setPaintProperty('theodore-solomon-trail', 'line-width', 2);
@@ -4275,7 +4282,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'west-coast-trail-vancouver', function() {
                             map.setPaintProperty('west-coast-trail-vancouver', 'line-width', 2);
@@ -4308,7 +4314,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'great-himalayan-trail', function() {
                             map.setPaintProperty('great-himalayan-trail', 'line-width', 2);
@@ -4341,7 +4346,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'te-araroa-trail', function() {
                             map.setPaintProperty('te-araroa-trail', 'line-width', 2);
@@ -4374,7 +4378,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'maah-daah-hey', function() {
                             map.setPaintProperty('maah-daah-hey', 'line-width', 2);
@@ -4407,7 +4410,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'drakensberg-grand-traverse', function() {
                             map.setPaintProperty('drakensberg-grand-traverse', 'line-width', 2);
@@ -4440,7 +4442,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'kings-trail-sweden', function() {
                             map.setPaintProperty('kings-trail-sweden', 'line-width', 2);
@@ -4473,7 +4474,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'massachusetts-midstate-trail', function() {
                             map.setPaintProperty('massachusetts-midstate-trail', 'line-width', 2);
@@ -4506,7 +4506,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'pennine-way', function() {
                             map.setPaintProperty('pennine-way', 'line-width', 2);
@@ -4539,7 +4538,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'rota-vicentina', function() {
                             map.setPaintProperty('rota-vicentina', 'line-width', 2);
@@ -4572,7 +4570,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'susquehannock-trail-system', function() {
                             map.setPaintProperty('susquehannock-trail-system', 'line-width', 2);
@@ -4605,7 +4602,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'southwest-coast-path', function() {
                             map.setPaintProperty('southwest-coast-path', 'line-width', 2);
@@ -4638,7 +4634,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'tokai-nature-trail', function() {
                             map.setPaintProperty('tokai-nature-trail', 'line-width', 2);
@@ -4671,7 +4666,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'wales-coast-path', function() {
                             map.setPaintProperty('wales-coast-path', 'line-width', 2);
@@ -4704,7 +4698,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'via-dinarica-trail', function() {
                             map.setPaintProperty('via-dinarica-trail', 'line-width', 2);
@@ -4737,7 +4730,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'grand-italian-trail', function() {
                             map.setPaintProperty('grand-italian-trail', 'line-width', 2);
@@ -4770,7 +4762,6 @@
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
-                            //map.setLayoutProperty('pacific-crest-trail', 'visibility', 'none' );
                         });
                         map.on('mouseleave', 'israel-trail', function() {
                             map.setPaintProperty('israel-trail', 'line-width', 2);
@@ -4779,8 +4770,7 @@
                         });
                     });
                 });
-
-			</script>
-		</div>	
+            });
+        </script>
 	</body>
 </html>

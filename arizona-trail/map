@@ -93,7 +93,7 @@
 	</head>
 	<body>
         <div id="dialog" title="Add Location" style="display:none">
-          <p>Please describe this location:</p>          
+          <p>Enter a description for this location.<br><font size=2><br>Please note that LTM does not knowingly publish data regarding non-<a href='https://lnt.org/why/7-principles/' target='_blank' rel='noopener noreferrer'>LNT</a> campsites and fire rings, unofficial side trails, and other items we consider inconsistent with responsible use.</font></p>
           <input type="text" id="addLocationDescription" name="name" required minlength="10" maxlength="75" size="25">
           <br>
           <br>
