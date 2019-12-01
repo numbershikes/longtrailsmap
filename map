@@ -245,7 +245,7 @@
                         $("#search_go").click();                                                    // show search db.
                         
                         var helloPopup = new mapboxgl.Popup({closeButton: true, closeOnClick: true, anchor: 'center'})
-                            .setHTML("Welcome to longtrailsmap.net!<br>Click the 'About' button in the upper lefthand corner for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site! <a target='_blank' rel='noopen noreferrer' href='https://github.com/numbers007/longtrailsmap'>github.com/numbers007/longtrailsmap</a>")
+                            .setHTML("Welcome to longtrailsmap.net!<br>Click 'About' in the sidebar for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener noreferrer' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site.<br><a target='_blank' rel='noopen noreferrer' href='https://github.com/numbers007'>LongTrailsMap is on GitHub!</a>")
                             .setLngLat([-96.947, 39.55])
                             //.addTo(map)
                             ;
