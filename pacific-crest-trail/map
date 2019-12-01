@@ -100,14 +100,16 @@
         </div>
         <div id="container">
             <div id="sidebar-container">
+                <a href='/pacific-crest-trail/elevation'>PCT Elevation Profile in 3D</a><br>
+                <a href='/pacific-crest-trail/about'>About LTM: PCT</a><br>
+                <a href='/map'>Back to LTM</a><br>
+                <br>
                 <input id="search-text" type="search" name="wpt_search" placeholder="Search">
                 <button type="button" id="search_go">Go</button>
             </div>
             <div id="map-container">
                 <div id="map-buttons">
-                    <button type="button" id="about" class="map-buttons" onclick="window.location.href='/pacific-crest-trail/about'">About</button>
                     <button type="button" id="sidebar-btn" class="map-buttons">Sidebar</button>
-                    <button type="button" id="ltm" class="map-buttons" onclick="window.location.href='http://www.longtrailsmap.net'">LTM</button>
                     <pre id='info'></pre>
                 </div>
                 <div id="map"></div>
