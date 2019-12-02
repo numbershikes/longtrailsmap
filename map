@@ -4758,7 +4758,7 @@
                         map.on('mousemove', 'israel-trail', function(e) {
                             map.setPaintProperty('israel-trail', 'line-width', 4);
             
-                            trailNamePopup.setText('Isreal Trail');
+                            trailNamePopup.setText('Israel Trail');
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
