@@ -299,14 +299,46 @@
                             helloPopup.remove();
                         });
 
+
                         map.addLayer({
-                            'id': 'north-umpqua-trail',				            // 'id' is arbitrary
+                            'id': 'knobstone-trail',				            // 'id' is arbitrary
                             'type': 'line',
                             'source': {
                                 'type': 'vector',
-                                'url': 'mapbox://user9984.0vxi4g01'        	    // this s/b a tileset 'map id'. must be an existing resource.
+                                'url': 'mapbox://user9984.b3xla5jn'        	    // this s/b a tileset 'map id'. must be an existing resource.
                             },
                             'source-layer': 'tracks',				            // from tileset page.
+                            'layout': {
+                                'visibility': 'visible'
+                            },
+                            'paint': {
+                                'line-color': '#ff0901',
+                                'line-width': 2
+                            }
+                        });
+                        map.on('mousemove', 'knobstone-trail', function(e) {
+                            map.setPaintProperty('knobstone-trail', 'line-width', 4);
+            
+                            trailNamePopup.setText('Knobstone Trail');
+                            trailNamePopup
+                                .setLngLat(e.lngLat)
+                                .addTo(map);
+                        });
+                        map.on('mouseleave', 'knobstone-trail', function() {
+                            map.setPaintProperty('knobstone-trail', 'line-width', 2);
+
+                            trailNamePopup.remove();
+                        });
+
+
+                        map.addLayer({
+                            'id': 'north-umpqua-trail',
+                            'type': 'line',
+                            'source': {
+                                'type': 'vector',
+                                'url': 'mapbox://user9984.0vxi4g01'
+                            },
+                            'source-layer': 'tracks',
                             'layout': {
                                 'visibility': 'visible'
                             },
