@@ -3958,7 +3958,7 @@
                         map.on('mousemove', 'across-utah', function(e) {
                             map.setPaintProperty('across-utah', 'line-width', 4);
             
-                            trailNamePopup.setText('Unnamed Utah Route');
+                            trailNamePopup.setText('Across Utah');
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
