@@ -394,13 +394,13 @@
 
 
                         map.addLayer({
-                          'id': 'ozark-trail-3',
+                          'id': 'ozark-trail',
                             'type': 'line',
                             'source': {
                                 'type': 'vector',
-                                'url': 'mapbox://user9984.ck0pvwuzz0h0o2opupyqgfty6-9syw6'        
+                                'url': 'mapbox://user9984.ar4yrojq'        
                             },
-                            'source-layer': 'ozark-trail-3',
+                            'source-layer': 'tracks',
                             'layout': {
                                 'visibility': 'visible'
                             },
@@ -409,16 +409,16 @@
                                 'line-width': 2
                             }
                         });
-                        map.on('mousemove', 'ozark-trail-3', function(e) {
-                            map.setPaintProperty('ozark-trail-3', 'line-width', 4);
+                        map.on('mousemove', 'ozark-trail', function(e) {
+                            map.setPaintProperty('ozark-trail', 'line-width', 4);
 
                             trailNamePopup.setText('Ozark Trail');
                             trailNamePopup
                                 .setLngLat(e.lngLat)
                                 .addTo(map);
                         });
-                        map.on('mouseleave', 'ozark-trail-3', function() {
-                            map.setPaintProperty('ozark-trail-3', 'line-width', 2);
+                        map.on('mouseleave', 'ozark-trail', function() {
+                            map.setPaintProperty('ozark-trail', 'line-width', 2);
 
                             trailNamePopup.remove();
                         });
@@ -4739,35 +4739,35 @@
 
 
 
-                        map.addLayer({
-                            'id': 'grand-italian-trail',
-                            'type': 'line',
-                            'source': {
-                                'type': 'vector',
-                                'url': 'mapbox://user9984.9k8lu162'
-                            },
-                            'source-layer': 'tracks',
-                            'layout': {
-                                'visibility': 'visible'
-                            },
-                            'paint': {
-                                'line-color': '#ff0901',
-                                'line-width': 2
-                            }
-                        });
-                        map.on('mousemove', 'grand-italian-trail', function(e) {
-                            map.setPaintProperty('grand-italian-trail', 'line-width', 4);
+                        // map.addLayer({
+                            // 'id': 'grand-italian-trail',
+                            // 'type': 'line',
+                            // 'source': {
+                                // 'type': 'vector',
+                                // 'url': 'mapbox://user9984.9k8lu162'
+                            // },
+                            // 'source-layer': 'tracks',
+                            // 'layout': {
+                                // 'visibility': 'visible'
+                            // },
+                            // 'paint': {
+                                // 'line-color': '#ff0901',
+                                // 'line-width': 2
+                            // }
+                        // });
+                        // map.on('mousemove', 'grand-italian-trail', function(e) {
+                            // map.setPaintProperty('grand-italian-trail', 'line-width', 4);
             
-                            trailNamePopup.setText('Grand Italian Trail');
-                            trailNamePopup
-                                .setLngLat(e.lngLat)
-                                .addTo(map);
-                        });
-                        map.on('mouseleave', 'grand-italian-trail', function() {
-                            map.setPaintProperty('grand-italian-trail', 'line-width', 2);
+                            // trailNamePopup.setText('Grand Italian Trail');
+                            // trailNamePopup
+                                // .setLngLat(e.lngLat)
+                                // .addTo(map);
+                        // });
+                        // map.on('mouseleave', 'grand-italian-trail', function() {
+                            // map.setPaintProperty('grand-italian-trail', 'line-width', 2);
 
-                            trailNamePopup.remove();
-                        });
+                            // trailNamePopup.remove();
+                        // });
 
 
 
