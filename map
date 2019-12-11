@@ -99,7 +99,7 @@
                 <a href='/pacific-crest-trail/map'>Pacific Crest Trail Page</a><br>
                 <br>
                 <a href='/whatsnew.html'>What's New?</a><br>
-                <a href='/about.html'>About LongTrailMap</a><br>
+                <a href='/about.html'>About LongTrailsMap</a><br>
                 <br>
                 <input id="search-text" type="search" name="wpt_search" placeholder="Search">
                 <button type="button" id="search_go">Go</button>
