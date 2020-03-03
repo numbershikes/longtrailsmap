@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-128007478-5"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-128007478-5');
+        </script>
+
+		<meta charset='utf-8' />
+		<title>LongTrailsMap</title>
+        <link rel="icon" type="image/png" href="http://www.longtrailsmap.net/favicon.png">    
+		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+        <script src="/../common/ResizeSensor.js"></script>
+        <script src="/../common/ElementQueries.js"></script>
+        
+		<link rel='stylesheet' href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css">
+        
+		<style>
+            * {
+                box-sizing: border-box;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            #container {
+                display: flex; 
+                height: 100vh;
+                width: 100%;
+            }
+            
+            #sidebar-container {
+                order: 1;
+                height: 100%;
+                flex-basis: 25%;
+                overflow-y: scroll;
+                background-color: #F6F6F6;
+            }
+            
+            #search-text, #search_go #search_reset {
+                margin: 4px;
+            }
+            
+            #search-text {
+                width: 70%;
+            }
+            
+            #map-container {
+                order: 2;
+                height: 100%;
+                flex-basis: 75%;
+            }
+            
+            #map, #map-buttons {
+                position: absolute;
+                height: 100vh;
+                width: 75%;
+            }
+            
+            #map {
+                z-index: 5;
+            }
+            
+            #map-buttons {
+                z-index: 6;
+                margin: 4px;
+                height: 1px;
+                width: 1px;            
+            }
+            
+            #info {
+                display: inline;
+                color: black;
+                background-color: white;                
+            }
+            
+<!--
+            .marker {
+                background-image: url('http://www.longtrailsmap.net/circle.svg');
+                background-size: cover;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+-->
+		</style>
+	</head>
+	<body>
+<!--
+        <div id="dialog" title="Add Location" style="display:none">
+            <p>Enter a description for this location.<br><font size=2><br>Please note that LTM does not knowingly publish data regarding non-<a href='https://lnt.org/why/7-principles/' target='_blank' rel='noopener noreferrer'>LNT</a> campsites and fire rings, unofficial side trails, and other items we consider inconsistent with responsible use.</font></p>
+            <input type="text" id="addLocationDescription" name="name" required minlength="10" maxlength="75" size="25">
+            <br>
+            <br>
+            <input type="button" id="btnAddLocationSubmit" value="Submit" />
+            <input type="button" id="btnAddLocationCancel" value="Cancel" />
+        </div>
+-->
+        <div id="pickTrailUnderCursor" title="Select Trail" style="display:none">
+            <p>There are multiple trails at this location.</p>
+        </div>
+        <div id="container">
+            <div id="sidebar-container">
+                <h2 style="text-align:center; text-decoration:underline;">LongTrailsMap.net</h2>
+<!--
+                <ul>
+                    <li><a href='/appalachian-trail/map'>Appalachian Trail Page</a></li>
+                    <li><a href='/arizona-trail/map'>Arizona Trail Page</a></li>
+                    <li><a href='/continental-divide-trail/map'>Continental Divide Trail</a></li>
+                    <li><a href='/pacific-crest-trail/map'>Pacific Crest Trail Page</a></li>
+                </ul>
+-->
+                <ul>
+                    <li><a href='/whatsnew.html'>What's New?</a></li>
+                    <li><a href='/about.html'>About LongTrailsMap</a></li>
+                </ul>
+                <br>
+                <input type="radio" id="topo" name="map-style" value="Topo" checked>
+                <label for="topo">Topo</label><br>
+                <input type="radio" id="satellite" name="map-style" value="Satellite">
+                <label for="satellite">Satellite</label><br>
+                <br>
+                <input id="search-text" type="search" name="wpt_search" placeholder="Search">
+                <button type="button" id="search_go">Go</button>
+                <button type="button" id="search_reset">Reset</button>
+            </div>
+            <div id="map-container">
+                <div id="map-buttons">
+                    <button type="button" id="sidebar-btn" class="map-buttons">Sidebar</button>
+                    <pre id='info'></pre>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var trailData = [];
+            var updateUrl = false;
+            var vars = [];
+            var map;
+            var mapStyle = "mapbox://styles/user9984/ck5zrr1ze0bho1ip85i1zytch"; // "Terrain (Blank+DEM)"
+            var trailIdOfActiveInfoPopup = '';
+            var trailNamePopup = new mapboxgl.Popup({ offset: 15, closeButton: false, closeOnClick: false });
+            var trailInfoPopup = new mapboxgl.Popup({ offset: 15, closeButton: true, closeOnClick: false });
+            var monitorTrailSourcesLoad = {};                      
+            var trailSources = {};
+            var trailsUnderCursor = [];
+
+            $( "#pickTrailUnderCursor" ).dialog({ autoOpen: false });
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramName = urlParams.get('name') ? urlParams.get('name').toLowerCase() : null;
+            const paramLatLon = urlParams.get('latlon');
+            const paramZoom = urlParams.get('zoom');
+            
+            trailInfoPopup.on('close', function (e) {
+                unhighlightTrail(trailIdOfActiveInfoPopup);
+                trailIdOfActiveInfoPopup = "";
+            });
+                
+            function findTrailsUnderCursor(x, y) {
+                var bbox = [
+                    [x - 5, y - 5],
+                    [x + 5, y + 5]
+                ];
+                
+                var features = map.queryRenderedFeatures(bbox);
+                
+                // Look through layers returned by .queryRenderedFeatures, filter out layers that lack feature.layer.metadata.ltm, and keep only the id's.
+                const layerIds = features.filter(function (a) {
+                    return getNested(a, 'layer', 'metadata', 'ltm', 'isLtmTrailLayer') == true;
+                }).map(feature => feature.layer.id);
+                
+                //TODO: these two [...new Set()] are redundant.
+                const uniqLayerIds = [...new Set(layerIds)];
+                
+                return [... new Set(uniqLayerIds.map(layerId => trailData.trails[layerId].properties.trailId))];
+            }
+
+            function searchResultClick(lon, lat, z, trailId) {                
+                updateUrl = false;
+                
+                $("#pickTrailUnderCursor").dialog("close");
+                
+                activateInfoPopup(trailId, trailData, map, 1000, 1000);
+                
+                map.flyTo({center: [lon, lat], zoom:z, speed: 0.75, curve: 1.5});
+                window.history.pushState('page', '', '?name=' + trailId);
+            };
+            
+            // TODO: change lat, lon to optional parameters, instead of using '1000' as placeholder.
+            function activateInfoPopup(trailId, trailData, map, lat, lon) {
+                if(lat == 1000) {
+                    //lat = trailData.trails[trailSources[trailId][0]].geometry.coordinates[0];
+                    lat = trailData.trails[trailId].geometry.coordinates[0];
+                }
+                
+                if(lon == 1000) {
+                    //lon = trailData.trails[trailSources[trailId][0]].geometry.coordinates[1];
+                    lon = trailData.trails[trailId].geometry.coordinates[1];
+                }
+                
+                if(trailIdOfActiveInfoPopup !== "") {
+                    unhighlightTrail(trailIdOfActiveInfoPopup);
+                }
+                
+                trailIdOfActiveInfoPopup = trailId;
+
+                highlightTrail(trailId);
+                
+                // TODO: does js automatically gc the previous version of .Popup when Mapbox runs the .close event (which, iirc, it should do automatically here), or is this a memory leak?
+                // check if trailNamePopup exists, and use trailNamePopup.remove if so.
+                //trailNamePopup = new mapboxgl.Popup({ offset: 15, closeButton: true });
+
+                //trailInfoPopup.setHTML("<b>" + trailData.trails[trailSources[trailId][0]].properties.name + "</b><br><br>" + trailData.trails[trailSources[trailId][0]].properties.ltwLink + "<br>" + trailData.trails[trailSources[trailId][0]].properties.ltmLink);
+                trailInfoPopup.setHTML("<b>" + trailData.trails[trailId].properties.name + "</b><br><br>" + trailData.trails[trailId].properties.dedicatedMapLink + "<br>" + trailData.trails[trailId].properties.ltwLink + "<br>" + trailData.trails[trailId].properties.ltmLink);
+
+                trailInfoPopup.setLngLat([lon, lat]);
+                    
+                if(trailInfoPopup.isOpen() == false) {
+                    trailInfoPopup.addTo(map);
+                }
+            } 
+            
+            function deselectTrail() {
+                const unhighlightTrailId = trailIdOfActiveInfoPopup;
+                
+                trailIdOfActiveInfoPopup = "";
+                unhighlightTrail(unhighlightTrailId);
+
+                trailInfoPopup.remove();
+            }
+
+            function highlightTrail(trailId) {
+                if(trailId !== "") {
+                    changeTrailLineWidth(trailId, 4);
+                }
+            }
+
+            function unhighlightTrail(trailId) {
+                if(trailId !== "") {
+                    changeTrailLineWidth(trailId, 2);
+                }
+            }
+
+            function changeTrailLineWidth(trailId, lineWidth) {
+                $.each(trailData.trails[trailSources[trailId][0]].properties.relatedLayerIds, function (k, v) {
+                    map.setPaintProperty(v, 'line-width', lineWidth);
+                });
+            }
+
+            function whenTrailLoads(trailId, cb) {
+                if(allSourcesOfTrailAreLoaded(trailId)) {
+                    cb();
+                } else {
+                    //is trail being tracked yet?
+                    if(monitorTrailSourcesLoad.hasOwnProperty(trailId) == false) { 
+                        monitorTrailSourcesLoad[trailId] = {};
+                        monitorTrailSourcesLoad[trailId]["sources"] = {};
+                        
+                        trailSources[trailId].forEach( (k, i) => {
+                            //TODO: should this .hasOwnProperty() call be on trailId, or layerId / sourceId?
+                            if(map.getStyle().sources.hasOwnProperty(trailId)) {
+                                monitorTrailSourcesLoad[trailId]["sources"][k] = map.isSourceLoaded(k);
+                            } else {
+                                monitorTrailSourcesLoad[trailId]["sources"][k] = false;
+                            }
+                        });
+                    }
+                    
+                    // TODO: add ability to handle more than one callback?
+                    monitorTrailSourcesLoad[trailId]["callback"] = cb;
+                }
+            }
+            
+            function allSourcesOfTrailAreLoaded(trailId) {
+                return trailSources[trailId].map(function(relatedLayerId) {
+                    if(map.getStyle().sources.hasOwnProperty(relatedLayerId)) {
+                        return map.isSourceLoaded(relatedLayerId);
+                    } else {
+                        return false;
+                    }
+                }).every(e => e == true);    
+            }
+            
+            // getNested: check for and retrieve a nested json property. https://stackoverflow.com/a/2631198/12357880
+            function getNested(obj, ...args) {
+                return args.reduce((obj, level) => obj && obj[level], obj)
+            }
+        
+            $.getJSON("http://www.longtrailsmap.net/ltm-trails3.json", function( data ) {
+                trailData = data;
+
+                // Create trailSources as dict(trailId, [relatedLayerIds]).
+                Array.from(Object.keys(trailData.trails)).forEach(function(k) {
+                    //TODO: identical to replace trailData.trails[k].properties.trailId with 'k'?
+                    if(trailSources.hasOwnProperty(trailData.trails[k].properties.trailId) == false) {
+                        trailSources[trailData.trails[k].properties.trailId] = trailData.trails[k].properties.relatedLayerIds;
+                    }
+                });
+                
+                $.get("/../common/vars.json", function (vars) {
+                    mapboxgl.accessToken = vars.mapbox;
+
+                    $(document).ready(function(){
+                        // Mapbox GL JS does not automatically resize & refresh map when size of container changes. Using ResizeSensor to fix. https://stackoverflow.com/a/19418065 
+                        new ResizeSensor( $('#map'), function() {
+                            map.resize();
+                        });
+
+                        $('#sidebar-btn').click(function () {
+                            if($('#sidebar-container').css('display') !== 'none') {
+                                $('#sidebar-container').css('display', 'none');
+                                $('#map-container').css('width', '100%');
+                                $('#map').css('width', '100%');                    
+                            } else {
+                                $('#sidebar-container').css('display', 'block');
+                                $('#map-container').css('width', '80%');
+                                $('#map').css('width', '80%');                                        
+                            }
+                        });
+                        
+                        $("#search-text").keyup(function(event) {
+                            if (event.keyCode === 13) {
+                                $("#search_go").click();
+                            }
+                        });                
+                        
+                        //$("#addLocationDescription").keyup(function(event) {
+                        //    if (event.keyCode === 13) {
+                        //        $("#btnAddLocationSubmit").click();
+                        //    }
+                        //});                
+
+                        $("#search_reset").click(function(){
+                            $("#search-text").val("");
+                            $("#search_go").click();
+                        });
+                        
+                        $('#search_go').click(function(){
+                            var results = [];
+                            var items = [];
+                            
+                            $('#results_list').remove();
+
+                            results = Object.keys(trailData.trails).filter(function(key) {
+                                return (trailData.trails[key].properties.searchString !== "null"
+                                    && trailData.trails[key].properties.searchString.includes($('#search-text').val().toLowerCase())
+                                    && trailData.trails[key].properties.trailId != "null");
+                            });
+
+                            // sort keys based on associated trail names.
+                            results.sort(function(a, b) {
+                                var textA = trailData.trails[a].properties.name.toLowerCase();
+                                var textB = trailData.trails[b].properties.name.toLowerCase();
+                                return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                            });
+                            
+                            $.each(results, function( index, value) {
+                                var f = `searchResultClick(${trailData.trails[value].geometry.coordinates[1]}, ${trailData.trails[value].geometry.coordinates[0]}, ${trailData.trails[value].properties.zoom}, \"${trailData.trails[value].properties.trailId}\")`;
+                                items.push( "<li><a href='#' onClick=\'"+f+"\'>" + trailData.trails[value].properties.name + "</a></li>" );
+                            });
+
+                            $("<ul/>", {
+                                "id": "results_list",
+                                "class": "my-new-list",
+                                html: items.join("")
+                            }).appendTo("#sidebar-container");
+                        });
+                    
+                        map = new mapboxgl.Map({
+                            container: 'map',
+                            style: mapStyle,
+                            center: [-116.31907, 41.21099],
+                            zoom: 4.5,
+                            minZoom: 0,
+                            maxZoom: 22
+                        });
+
+                        var nav = new mapboxgl.NavigationControl();
+                        map.addControl(nav, 'top-right');
+
+                        var geoLoc = new mapboxgl.GeolocateControl({
+                            positionOptions: {
+                                enableHighAccuracy: true
+                            },
+                            trackUserLocation: true
+                        });
+                        map.addControl(geoLoc, 'top-right');
+
+                        var scale = new mapboxgl.ScaleControl({
+                            maxWidth: 80,
+                            unit: 'imperial'
+                        });
+                        map.addControl(scale);
+                        // scale.setUnit('metric');
+                    
+                        // show lnglat of cursor, update whenever cursor moves.
+                        map.on('mousemove', function (e) {
+                            document.getElementById('info').innerHTML = "(" + e.lngLat.lat.toFixed(6) + ", " + e.lngLat.lng.toFixed(6) + ", " + map.getZoom().toFixed(2) + ")";
+                        });
+                        
+                        // update url each time the map stops moving.
+                        map.on('moveend', function (e) {
+                            var center = map.getCenter();
+                            var zoom = map.getZoom();
+                            
+                            if(updateUrl == true) {
+                                window.history.pushState('page', '', '?latlon=(' + center.lat.toFixed(5) + ',' + center.lng.toFixed(5) +')&zoom=' + zoom.toFixed(2));
+                            }
+
+                            updateUrl = true;
+                        });
+                    
+                        map.on('load', function () {
+                            $("#search_go").click();                                                    // show search db.
+
+                            var helloPopup = new mapboxgl.Popup({closeButton: true, closeOnClick: true, anchor: 'center'})
+                                .setHTML("Welcome to longtrailsmap.net!<br>Click 'About' in the sidebar for more info.<br>Longtrailsmap.net would like to thank the incredible <a target='_blank' rel='noopener' href='https://www.mapbox.com/community/'>Mapbox Community Program</a><br>for their generous sponsorship of server costs associated with this site.<br><a target='_blank' rel='noopener noreferrer' href='https://github.com/numbers007'>LongTrailsMap is on GitHub!</a>")
+                                .setLngLat([-116.31907, 41.21099]); 
+
+                            //var addLocationLat = "";
+                            //var addLocationLon = "";
+                            //var addLocationZoom = "";
+                            
+                            if(window.location.search == "") {
+                                helloPopup.addTo(map);
+                            } else {
+                                if(paramName !== "" && paramName !== null && trailData.trails.hasOwnProperty(paramName)) {
+                                    updateUrl = false;
+                                    map.flyTo({center: [trailData.trails[paramName].geometry.coordinates[1], trailData.trails[paramName].geometry.coordinates[0]], zoom:trailData.trails[paramName].properties.zoom, speed: 0.5, curve: 1.82});
+                                    whenTrailLoads(paramName, function() {activateInfoPopup(paramName, trailData, map, 1000, 1000)});
+                                } else {
+                                    if(paramLatLon !== null && paramZoom !== null) {
+                                        const lat = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[0]);
+                                        const lon = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[1]);
+                                        
+                                        map.flyTo({center: [lon, lat], zoom: parseFloat(paramZoom), speed:0.5, curve: 1.82});
+                                    } else {
+                                        if(paramLatLon != null) {
+                                            const lat = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[0]);
+                                            const lon = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[1]);
+                                            
+                                            map.flyTo({center: [lon, lat], zoom: 16, speed:0.5, curve: 1.82});
+                                        } else {
+                                            if(paramZoom !== null) {
+                                                map.zoomTo(paramZoom);
+                                            }
+                                        }
+                                    }
+                                }
+                            };
+
+                            map.doubleClickZoom.disable();
+                            
+                            // TODO: change process for readding layers after changing base map. see https://github.com/mapbox/mapbox-gl-js/issues/7579#issuecomment-538029486
+                            $('input[type=radio][name=map-style]').change(function() {
+                                if (this.value == 'Topo') {
+                                    mapStyle = 'mapbox://styles/user9984/ck5zrr1ze0bho1ip85i1zytch';                // "Terrain (Blank+DEM)"
+                                }
+                                else if (this.value == 'Satellite') {
+                                    mapStyle = 'mapbox://styles/mapbox/satellite-v9';
+                                }
+                                map.setStyle(mapStyle);
+                            });
+
+                            // re-add all trail layers when map is switched from 'topo' to 'satellite' using the radio buttons.
+                            // apparently using 'style.load' is not advised (https://github.com/mapbox/mapbox-gl-js/issues/7579), but map.once('styledata', f(e)) fires multiple times.
+                            // https://github.com/mapbox/mapbox-gl-js/issues/6076
+                            // https://gis.stackexchange.com/questions/240134/mapbox-gl-js-source-loaded-event
+                            map.on('style.load', function(e) {                   // 'styledata'
+                                addTrailLayers(map, trailData);
+                            });
+                            
+                            map.on("sourcedata", function(e) {
+                                var trailId = "";
+                                
+                                if(e.sourceDataType == "content") {
+                                    for(const k of Object.keys(monitorTrailSourcesLoad)) {
+                                        if(Object.keys(monitorTrailSourcesLoad[k]["sources"]).indexOf(e.sourceId) >= 0) {
+                                            trailId = k;
+                                            
+                                            monitorTrailSourcesLoad[trailId]["sources"][e.sourceId] = true;
+                                        }
+                                    }
+
+                                    if(trailId !== "") {
+                                        if(Object.values(monitorTrailSourcesLoad[trailId]["sources"]).every(v => v == true)) {
+                                            monitorTrailSourcesLoad[trailId]["callback"]();
+
+                                            delete monitorTrailSourcesLoad[trailId];
+                                        }
+                                    }
+                                }
+                            });
+                            
+                            map.on('dragstart', function() {
+                                helloPopup.remove();
+                            });
+
+                            map.on('click', function (e) {
+                                var uniqTrailIds = {};
+
+                                uniqTrailIds = findTrailsUnderCursor(e.point.x, e.point.y);
+                                
+                                $( "#pickTrailUnderCursor" ).dialog("close");
+                                
+                                if(uniqTrailIds.length == 0) {                                    
+                                    if(trailIdOfActiveInfoPopup !== "") {
+                                        unhighlightTrail(trailIdOfActiveInfoPopup);
+                                        trailInfoPopup.remove();
+                                        trailIdOfActiveInfoPopup = "";
+                                    }
+                                    
+                                } else if(uniqTrailIds.length == 1) {
+                                    if(trailIdOfActiveInfoPopup !== "") {
+                                        unhighlightTrail(trailIdOfActiveInfoPopup);
+                                    }
+                                    
+                                    activateInfoPopup(uniqTrailIds[0], trailData, map, e.lngLat.lat, e.lngLat.lng);
+                                    
+                                } else {                                       // must be trailIds.length > 1.
+                                    var trailsUnderCursor = [];
+                                    
+                                    $("#trailsUnderCursor").remove();
+                                    
+                                    $.each(uniqTrailIds, function( index, value) {
+                                        var f = `activateInfoPopup(\"${value}\", trailData, map, ${e.lngLat.lat}, ${e.lngLat.lng})`;
+                                        trailsUnderCursor.push( "<li><a href='#' onClick=\'"+f+"\'>" + trailData.trails[value].properties.name + "</a></li>" );
+                                        
+                                        //highlightTrail(value);
+                                    });
+
+                                    $("<ul/>", {
+                                        "id": "trailsUnderCursor",
+                                        "class": "trails-list",
+                                        html: trailsUnderCursor.join("")
+                                    }).appendTo("#pickTrailUnderCursor");
+
+                                    //addLocationLat = e.lngLat.lat;
+                                    //addLocationLon = e.lngLat.lng;
+
+                                    $( "#pickTrailUnderCursor" ).dialog("open");
+                                }
+                                
+                            });                        
+                            
+                            //map.on('dblclick', function (e) {
+                            //    addLocationLat = e.lngLat.lat;
+                            //    addLocationLon = e.lngLat.lng;
+                            //    addLocationZoom = map.getZoom();
+                            //    
+                            //    $( function() {
+                            //        $( "#dialog" ).dialog();
+                            //    });
+                            //});
+
+                            //$("#btnAddLocationSubmit").click(function(e) {
+                            //    //var msg = 'http://www.longtrailsmap.net/pacific-crest-trail?latlon=(' + addLocationLat + ',' + addLocationLon + ')&zoom=' + addLocationZoom + '   PCT:' + $("#addLocationDescription").val();
+                            //    var msg = 'http://www.longtrailsmap.net/pacific-crest-trail?latlon=(' + addLocationLat + ',' + addLocationLon + ')+zoom=' + addLocationZoom + '  PCT:' + $("#addLocationDescription").val();
+                            //
+                            //    
+                            //    $.get('https://p6p0ync5tb.execute-api.us-east-1.amazonaws.com/v1/ltm?Desc=' + msg);
+                            //    
+                            //    $("#addLocationDescription").val('');
+                            //    
+                            //    $("#dialog").dialog('close');
+                            //});
+                            
+                            //$("#btnAddLocationCancel").click(function(e) {
+                            //    $("#addLocationDescription").val('');
+                            //    
+                            //    $("#dialog").dialog('close');
+                            //});
+
+
+                            addTrailLayers(map, trailData);
+                            
+                            function addTrailLayers(map, trailData) {
+                                $.each(trailData.trails, function(layerId, value) {
+                                    if(trailData.trails[layerId].properties.sourceUrl != "null") {
+                                        map.addSource(layerId, {
+                                            type: trailData.trails[layerId].properties.sourceType,
+                                            url: trailData.trails[layerId].properties.sourceUrl
+                                        });
+                                        
+                                        map.addLayer({
+                                            'id': layerId,
+                                            'type': 'line',
+                                            'source': layerId,
+                                            'source-layer': trailData.trails[layerId].properties.sourceLayer,
+                                            'layout': {
+                                                'visibility': 'visible'
+                                            },
+                                            'paint': {
+                                                'line-color': '#ff0901',
+                                                'line-width': 2
+                                            },
+                                            'metadata': {
+                                                'ltm' : {
+                                                    'isLtmTrailLayer': true,
+                                                    'trailId': trailData.trails[layerId].properties.trailId
+                                                }
+                                            }
+                                        });
+                                        
+                                        map.on('mousemove', layerId, function(e) {
+                                            map.getCanvas().style.cursor = 'pointer';
+                                            
+                                            //const trailId = trailData.trails[layerId].properties.shortName;
+                                            
+                                            if(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name) == -1) {
+                                                trailsUnderCursor.push(trailData.trails[layerId].properties.name);
+                                            }
+                                            
+                                            console.log(trailsUnderCursor.reduce( (acc, val) => acc.concat(val) ));
+
+                                            highlightTrail(trailData.trails[layerId].properties.trailId);
+                                            
+                                            if(trailsUnderCursor.length == 1) {
+                                                trailNamePopup.setHTML(trailsUnderCursor[0]);
+                                            } else {
+                                                trailNamePopup.setHTML("• ".concat(trailsUnderCursor.join("<br>• ")));
+                                            }
+                                            
+                                            trailNamePopup
+                                                .setLngLat(e.lngLat)
+                                                .addTo(map);
+                                        });
+                                        
+                                        map.on('mouseleave', layerId, function() {
+                                            map.getCanvas().style.cursor = '';
+                                            
+                                            const trailId = trailData.trails[layerId].properties.trailId;
+                                            
+                                            if(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name) !== -1) {
+                                                trailsUnderCursor.splice(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name), 1);
+                                            }
+                                                
+                                            if(trailId !== trailIdOfActiveInfoPopup) {
+                                                unhighlightTrail(trailData.trails[layerId].properties.trailId);
+                                            }
+
+                                            trailNamePopup.remove();
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+                })
+                .fail(function() { alert("Error: Unable to load trails."); });
+            })
+            .fail(function() { alert("Error: Unable to load trails."); });
+            //.fail( function(d, textStatus, error) {
+            //    console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+            //});
+        </script>
+	</body>
+</html>
