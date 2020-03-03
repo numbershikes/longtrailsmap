@@ -1,0 +1,164 @@
+{
+    "geometry": {
+        "type": "Point",
+        "coordinates": [41.1532517005005, -121.861187341194]
+    },
+    "properties": {
+        "name": "Pacific Crest Trail",
+        "trailId": "pacific-crest-trail",
+        "description": "null",
+        "searchString": "pacific crest trail pacific-crest-trail null 'null'",
+        "ltmLink": "<a href='http://www.longtrailsmap.net/map?name=pacific-crest-trail'>Shareable LTM Link</a>",
+        "ltwArticleUrl": "http://www.longtrailswiki.net/wiki/Pacific_Crest_Trail",
+        "zoom": "4.46",
+        "sourceType": "vector",
+        "sources": {
+            "pacific-crest-trail-CA_Sec_A": {
+                "sourceUrl": "mapbox://user9984.ck0lir7ra1wx42nnytqdjpw4t-1qf41",
+                "layerId": "ltm201909A_CA_Sec_A_tracks"
+            }, 
+            "pacific-crest-trail-WA_Sec_L": {
+                "sourceUrl": "mapbox://user9984.ck0a9tr4s19ad2iqu9wofvbn9-0t6sv",
+                "layerId": "ltm201909A_WA_Sec_L_tracks"
+            }, 
+            "pacific-crest-trail-WA_Sec_K": {
+                "sourceUrl": "mapbox://user9984.ck0a9tj0p25ev2vo0850x47hy-45ne7",
+                "layerId": "ltm201909A_WA_Sec_K_tracks"
+            }, 
+            "pacific-crest-trail-WA_Sec_J": {
+                "sourceUrl": "mapbox://user9984.ck0a9tadc19a42iqu64om1b6h-80med",
+                "layerId": "ltm201909A_WA_Sec_J_tracks"
+            }, 
+            "pacific-crest-trail-WA_Sec_I": {
+                "sourceUrl": "mapbox://user9984.ck0a9t1n51bvo2oquks5x6eyi-9f0w4",
+                "layerId": "ltm201909A_WA_Sec_I_tracks"
+            }, 
+            "pacific-crest-trail-WA_Sec_H": {
+                "sourceUrl": "mapbox://user9984.ck0a9sqed25hj2io0a9x6lup1-5z3kw",
+                "layerId": "ltm201909A_WA_Sec_H_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_G": {
+                "sourceUrl": "mapbox://user9984.ck0a9sf2w1bvi2oqu5t4b636p-6kegb",
+                "layerId": "ltm201909A_OR_Sec_G_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_F": {
+                "sourceUrl": "mapbox://user9984.ck0a9s6f60cy92it52m7gf9gu-24k4c",
+                "layerId": "ltm201909A_OR_Sec_F_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_E": {
+                "sourceUrl": "mapbox://user9984.ck0a9rydn0k202nqn3hoqt6gr-1qgl4",
+                "layerId": "ltm201909A_OR_Sec_E_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_D": {
+                "sourceUrl": "mapbox://user9984.ck0a9rp9e0k1t2nqnmpvy2t3l-482eo",
+                "layerId": "ltm201909A_OR_Sec_D_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_C": {
+                "sourceUrl": "mapbox://user9984.ck0a9rgue0mv72inm8o86s4o2-8gay5",
+                "layerId": "ltm201909A_OR_Sec_C_tracks"
+            }, 
+            "pacific-crest-trail-OR_Sec_B": {
+                "sourceUrl": "mapbox://user9984.ck0a9r8pq003t2nt9ax80b9u7-2s4to",
+                "layerId": "ltm201909A_OR_Sec_B_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_R": {
+                "sourceUrl": "mapbox://user9984.ck0a9r0gg003o2nt9mwpqxxzk-1kqcn",
+                "layerId": "ltm201909A_CA_Sec_R_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_Q": {
+                "sourceUrl": "mapbox://user9984.ck0a9qpjs0oaf2nnmxwoi194y-9e5mz",
+                "layerId": "ltm201909A_CA_Sec_Q_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_P": {
+                "sourceUrl": "mapbox://user9984.ck0a9qgne0oaa2nnm8aiauo99-8ma1s",
+                "layerId": "ltm201909A_CA_Sec_P_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_O": {
+                "sourceUrl": "mapbox://user9984.ck0a9q5q10ns92nofuqv6m2fr-61yag",
+                "layerId": "ltm201909A_CA_Sec_O_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_N": {
+                "sourceUrl": "mapbox://user9984.ck0a9pviv0jr32tqnj5jzvzk8-5ic6n",
+                "layerId": "ltm201909A_CA_Sec_N_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_M": {
+                "sourceUrl": "mapbox://user9984.ck0a9pn3j19mh2nqupswcgcv9-70gy6",
+                "layerId": "ltm201909A_CA_Sec_M_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_L": {
+                "sourceUrl": "mapbox://user9984.ck0a9pe2c0j7d2nt2jb2ievyj-7unvh",
+                "layerId": "ltm201909A_CA_Sec_L_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_K": {
+                "sourceUrl": "mapbox://user9984.ck0a9p6gm0jpk2oqnx1ew35e3-3at3z",
+                "layerId": "ltm201909A_CA_Sec_K_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_J": {
+                "sourceUrl": "mapbox://user9984.ck0a9oxvv7r3v2up7s845eisp-3hftq",
+                "layerId": "ltm201909A_CA_Sec_J_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_I": {
+                "sourceUrl": "mapbox://user9984.ck0a9opi125df2vo0m8vskues-0onpa",
+                "layerId": "ltm201909A_CA_Sec_I_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_H": {
+                "sourceUrl": "mapbox://user9984.ck0a9odwa0mtx2inm0px8zjp7-7xpa4",
+                "layerId": "ltm201909A_CA_Sec_H_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_G": {
+                "sourceUrl": "mapbox://user9984.ck0a9o4970j8j2it27awq5m8s-771gv",
+                "layerId": "ltm201909A_CA_Sec_G_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_F": {
+                "sourceUrl": "mapbox://user9984.ck0a9nw8n0jp52oqnwyxp3dln-5g7mf",
+                "layerId": "ltm201909A_CA_Sec_F_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_E": {
+                "sourceUrl": "mapbox://user9984.ck0a9nlzd003c2ut91ut7o9zs-4z8w2",
+                "layerId": "ltm201909A_CA_Sec_E_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_D": {
+                "sourceUrl": "mapbox://user9984.ck0a9nd0n0y4f2imrty505lvb-9poct",
+                "layerId": "ltm201909A_CA_Sec_D_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_C": {
+                "sourceUrl": "mapbox://user9984.ck0a9n2w30xzw2umr0tpoqksd-0x02x",
+                "layerId": "ltm201909A_CA_Sec_C_tracks"
+            }, 
+            "pacific-crest-trail-CA_Sec_B": {
+                "sourceUrl": "mapbox://user9984.ck0a9mtbd1ana2tqua7235e14-2cryl",
+                "layerId": "ltm201909A_CA_Sec_B_tracks"
+            }
+        },
+        "sourceLayer": "null",
+        "relatedLayerIds": ["pacific-crest-trail-CA_Sec_A", 
+            "pacific-crest-trail-WA_Sec_L", 
+            "pacific-crest-trail-WA_Sec_K", 
+            "pacific-crest-trail-WA_Sec_J", 
+            "pacific-crest-trail-WA_Sec_I", 
+            "pacific-crest-trail-WA_Sec_H", 
+            "pacific-crest-trail-OR_Sec_G", 
+            "pacific-crest-trail-OR_Sec_F", 
+            "pacific-crest-trail-OR_Sec_E", 
+            "pacific-crest-trail-OR_Sec_D", 
+            "pacific-crest-trail-OR_Sec_C", 
+            "pacific-crest-trail-OR_Sec_B", 
+            "pacific-crest-trail-CA_Sec_R", 
+            "pacific-crest-trail-CA_Sec_Q", 
+            "pacific-crest-trail-CA_Sec_P", 
+            "pacific-crest-trail-CA_Sec_O", 
+            "pacific-crest-trail-CA_Sec_N", 
+            "pacific-crest-trail-CA_Sec_M", 
+            "pacific-crest-trail-CA_Sec_L", 
+            "pacific-crest-trail-CA_Sec_K", 
+            "pacific-crest-trail-CA_Sec_J", 
+            "pacific-crest-trail-CA_Sec_I", 
+            "pacific-crest-trail-CA_Sec_H", 
+            "pacific-crest-trail-CA_Sec_G", 
+            "pacific-crest-trail-CA_Sec_F", 
+            "pacific-crest-trail-CA_Sec_E", 
+            "pacific-crest-trail-CA_Sec_D", 
+            "pacific-crest-trail-CA_Sec_C", 
+            "pacific-crest-trail-CA_Sec_B"]
+    }
+}

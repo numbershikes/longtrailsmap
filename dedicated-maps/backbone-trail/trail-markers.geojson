@@ -1,0 +1,9 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+{"type": "Feature","geometry": {"type": "Point","coordinates": [-118.58401518519888, 34.10309069411389]},"properties": {"title": "Campground with water","description": "Hike-in campground. First come, first served.","shortName": "1","searchString": "","ltmLink": "<a href='http://www.longtrailsmap.net/arizona-trail/map?name=1'>(Shareable link)</a>"}},
+{"type": "Feature","geometry": {"type": "Point","coordinates": [-118.70411651305773, 34.080119299092544]},"properties": {"title": "Water in sink in outhouse","description": "","shortName": "2","searchString": "","ltmLink": "<a href='http://www.longtrailsmap.net/arizona-trail/map?name=2'>(Shareable link)</a>"}},
+{"type": "Feature","geometry": {"type": "Point","coordinates": [-118.86596594491323, 34.08356867365377]},"properties": {"title": "Correctional Facility","description": "The correctional facility is not a water source.","shortName": "3","searchString": "","ltmLink": "<a href='http://www.longtrailsmap.net/arizona-trail/map?name=3'>(Shareable link)</a>"}},
+{"type": "Feature","geometry": {"type": "Point","coordinates": [-118.99466887161894, 34.12522420538316]},"properties": {"title": "Water in sink in outhouse","description": "","shortName": "4","searchString": "","ltmLink": "<a href='http://www.longtrailsmap.net/arizona-trail/map?name=4'>(Shareable link)</a>"}}
+    ]
+}

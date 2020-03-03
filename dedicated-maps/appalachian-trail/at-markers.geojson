@@ -1,0 +1,58 @@
+{
+    "type": "FeatureCollection",
+    "features": [{
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-84.19389478544952, 34.626708785294056]
+            },
+            "properties": {
+                "title": "Southern Terminus",
+                "description": "Southern Terminus",
+                "shortName": "southern-terminus",
+                "searchString": "southern terminus [terminus] southern-terminus",
+                "ltmLink": "<a href='http://www.longtrailsmap.net/appalachian-trail/map?name=southern-terminus'>(Shareable link)</a>"
+            }
+        }, {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-84.19352490292337, 34.62730830435423]
+            },
+            "properties": {
+                "title": "Springer Mountain",
+                "description": "Springer Mountain",
+                "shortName": "springer-mountain",
+                "searchString": "springer mountain [mountain] [peak] springer-mountain",
+                "ltmLink": "<a href='http://www.longtrailsmap.net/appalachian-trail/map?name=springer-mountain'>(Shareable link)</a>"
+            }
+        }, {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-68.92155119329982, 45.904461009458544]
+            },
+            "properties": {
+                "title": "Northern Terminus",
+                "description": "Northern Terminus",
+                "shortName": "northern-terminus",
+                "searchString": "northern terminus [terminus] northern-terminus",
+                "ltmLink": "<a href='http://www.longtrailsmap.net/appalachian-trail/map?name=northern-terminus'>(Shareable link)</a>"
+            }
+        }, {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-68.91902119578953, 45.90305544541022]
+            },
+            "properties": {
+                "title": "Mount Katahdin",
+                "description": "Mount Katahdin",
+                "shortName": "mount-katahdin",
+                "searchString": "mount katahdin [mountain] [peak] mount-katahdin",
+                "ltmLink": "<a href='http://www.longtrailsmap.net/appalachian-trail/map?name=mount-katahdin'>(Shareable link)</a>"
+            }
+        }        
+    ]
+}
+
