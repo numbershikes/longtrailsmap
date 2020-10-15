@@ -4,7 +4,7 @@
 
 Slippy maps of long distance hiking trails around the world.
 
-http://www.longtrailsmap.net
+https://www.longtrailsmap.net
 
 Powered by Mapbox GL JS. The site consists of static pages that are served off S3.
 
