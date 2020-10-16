@@ -13,7 +13,7 @@
 
 		<meta charset='utf-8' />
 		<title>LongTrailsMap</title>
-        <link rel="icon" type="image/png" href="http://www.longtrailsmap.net/favicon.png">    
+        <link rel="icon" type="image/png" href="https://www.longtrailsmap.net/favicon.png">    
 		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -129,9 +129,12 @@
                 </ul>
                 <br>
                 <input type="radio" id="topo" name="map-style" value="Topo" checked>
-                <label for="topo">Topo</label><br>
+                <label for="topo">Terrain</label><br>
                 <input type="radio" id="satellite" name="map-style" value="Satellite">
                 <label for="satellite">Satellite</label><br>
+                <br>
+                <input type="checkbox" id="wildfires" name="wildfires" checked='true'>
+                <label for="wildfires">Show wildfires layer</label><br>
                 <br>
                 <input id="search-text" type="search" name="wpt_search" placeholder="Search">
                 <button type="button" id="search_go">Go</button>
@@ -157,6 +160,7 @@
             var monitorTrailSourcesLoad = {};                      
             var trailSources = {};
             var trailsUnderCursor = [];
+            var wildfiresVisibility = 'visible';
 
             $( "#pickTrailUnderCursor" ).dialog({ autoOpen: false });
             
@@ -164,7 +168,8 @@
             const paramName = urlParams.get('name') ? urlParams.get('name').toLowerCase() : null;
             const paramLatLon = urlParams.get('latlon');
             const paramZoom = urlParams.get('zoom');
-            
+            const paramWildfires = urlParams.get('wildfires');
+
             trailInfoPopup.on('close', function (e) {
                 unhighlightTrail(trailIdOfActiveInfoPopup);
                 trailIdOfActiveInfoPopup = "";
@@ -300,7 +305,15 @@
                 return args.reduce((obj, level) => obj && obj[level], obj)
             }
         
-            $.getJSON("http://www.longtrailsmap.net/ltm-trails3.json", function( data ) {
+            //$.getJSON("./wildfires.json", function( data ) {
+            //    wildfires = data;
+            //})
+            //.fail( function(d, textStatus, error) {
+            //    console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+            //    alert("Error: Unable to load wildfires data.");
+            //});
+
+            $.getJSON("https://www.longtrailsmap.net/ltm-trails3.json", function( data ) {
                 trailData = data;
 
                 // Create trailSources as dict(trailId, [relatedLayerIds]).
@@ -418,7 +431,7 @@
                             var zoom = map.getZoom();
                             
                             if(updateUrl == true) {
-                                window.history.pushState('page', '', '?latlon=(' + center.lat.toFixed(5) + ',' + center.lng.toFixed(5) +')&zoom=' + zoom.toFixed(2));
+                                window.history.pushState('page', '', '?latlon=' + center.lat.toFixed(5) + ',' + center.lng.toFixed(5) +'&zoom=' + zoom.toFixed(2));
                             }
 
                             updateUrl = true;
@@ -438,11 +451,25 @@
                             if(window.location.search == "") {
                                 helloPopup.addTo(map);
                             } else {
+                                if(paramWildfires !== "" && paramWildfires !== null) {
+                                    if (paramWildfires === "on") {
+                                        wildfiresVisibility = "visible";
+                                        $("#wildfires").prop("checked", true);
+                                    } else {
+                                        if (paramWildfires === "off") {
+                                            wildfiresVisibility = "none";
+                                            $("#wildfires").prop("checked", false);
+                                        }
+                                    }
+                                }
+
                                 if(paramName !== "" && paramName !== null && trailData.trails.hasOwnProperty(paramName)) {
                                     updateUrl = false;
                                     map.flyTo({center: [trailData.trails[paramName].geometry.coordinates[1], trailData.trails[paramName].geometry.coordinates[0]], zoom:trailData.trails[paramName].properties.zoom, speed: 0.5, curve: 1.82});
                                     whenTrailLoads(paramName, function() {activateInfoPopup(paramName, trailData, map, 1000, 1000)});
                                 } else {
+                                    helloPopup.addTo(map);
+                                
                                     if(paramLatLon !== null && paramZoom !== null) {
                                         const lat = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[0]);
                                         const lon = parseFloat(paramLatLon.replace('(','').replace(')','').split(',')[1]);
@@ -465,7 +492,7 @@
 
                             map.doubleClickZoom.disable();
                             
-                            // TODO: change process for readding layers after changing base map. see https://github.com/mapbox/mapbox-gl-js/issues/7579#issuecomment-538029486
+                            // TODO: change process for re-adding layers after changing base map. see https://github.com/mapbox/mapbox-gl-js/issues/7579#issuecomment-538029486
                             $('input[type=radio][name=map-style]').change(function() {
                                 if (this.value == 'Topo') {
                                     mapStyle = 'mapbox://styles/user9984/ck5zrr1ze0bho1ip85i1zytch';                // "Terrain (Blank+DEM)"
@@ -476,12 +503,25 @@
                                 map.setStyle(mapStyle);
                             });
 
+                            $("#wildfires").change(function() {
+                                if ($("#wildfires").prop("checked") == true) {
+                                    wildfiresVisibility = "visible";
+                                } else {
+                                    wildfiresVisibility = "none";
+                                } 
+                                
+                                map.setLayoutProperty("wildfires", "visibility", wildfiresVisibility);
+                            });
+                            
                             // re-add all trail layers when map is switched from 'topo' to 'satellite' using the radio buttons.
                             // apparently using 'style.load' is not advised (https://github.com/mapbox/mapbox-gl-js/issues/7579), but map.once('styledata', f(e)) fires multiple times.
                             // https://github.com/mapbox/mapbox-gl-js/issues/6076
                             // https://gis.stackexchange.com/questions/240134/mapbox-gl-js-source-loaded-event
                             map.on('style.load', function(e) {                   // 'styledata'
                                 addTrailLayers(map, trailData);
+                                addWildfiresLayer(map);
+                                
+                                map.setLayoutProperty("wildfires", "visibility", wildfiresVisibility);
                             });
                             
                             map.on("sourcedata", function(e) {
@@ -511,6 +551,8 @@
                             });
 
                             map.on('click', function (e) {
+                                //add wildfires click handle here. see row 457 in pctmap. 
+                                
                                 var uniqTrailIds = {};
 
                                 uniqTrailIds = findTrailsUnderCursor(e.point.x, e.point.y);
@@ -587,6 +629,107 @@
 
 
                             addTrailLayers(map, trailData);
+                            addWildfiresLayer(map);
+                            
+                            function addWildfiresLayer(map) {
+                                map.addSource('wildfires', {
+                                    type: 'vector',
+                                    url: 'mapbox://user9984.wildfires-tiles'
+                                });
+                                
+                                map.addLayer({
+                                    'id': 'wildfires',
+                                    'type': 'fill',
+                                    'source': 'wildfires',
+                                    'source-layer': 'wildfires',
+                                    'layout': {
+                                        'visibility': wildfiresVisibility
+                                    },
+                                    'paint': {
+                                        'fill-color': '#ff0901',
+                                        'fill-opacity': 0.3
+                                    },
+                                    'metadata': {
+                                        'ltm' : {
+                                            'isLtmTrailLayer': false
+                                        }
+                                    }
+                                }, 'mapbox-terrain-rgb');
+
+                                map.on('mousemove', 'wildfires', function(e) {
+                                    var nf = new Intl.NumberFormat();
+
+                                    map.getCanvas().style.cursor = 'pointer';
+
+                                    wfLayers = e.features.filter(function (a) {
+                                        return a.layer.id == "wildfires"
+                                    });
+
+                                    wfDescriptions = wfLayers.map(layer =>
+                                        layer.properties.IncidentName 
+                                        + " ("
+                                        + (Object.keys(layer["properties"]).includes("GISAcres") ? nf.format(layer["properties"]["GISAcres"].toFixed(1)) : "NA")
+                                        + " acres)"
+                                    );
+
+                                    if(wfDescriptions.length == 1) {
+                                        trailNamePopup.setHTML("<b>Wildfire:</b> " + wfDescriptions[0]);
+                                    } else {                                        
+                                        trailNamePopup.setHTML("<b>Wildfires:</b><br>" + "• ".concat(wfDescriptions.join("<br>• ")));
+                                    }
+
+                                    trailNamePopup
+                                        .setLngLat(e.lngLat)
+                                        .addTo(map);
+                                    
+                                    //var features = map.queryRenderedFeatures(bbox);
+                
+                                    
+                                            // Look through layers returned by .queryRenderedFeatures, filter out layers that lack feature.layer.metadata.ltm, and keep only the id's.
+                                    //        const layerIds = features.filter(function (a) {
+                                    //           return getNested(a, 'layer', 'metadata', 'ltm', 'isLtmTrailLayer') == true;
+                                    //        }).map(feature => feature.layer.id);
+                                            
+                                            //TODO: these two [...new Set()] are redundant.
+                                    //        const uniqLayerIds = [...new Set(layerIds)];
+                                            
+                                    //        return [... new Set(uniqLayerIds.map(layerId => trailData.trails[layerId].properties.trailId))];
+                                    //    }
+                                    
+                                    //const trailId = trailData.trails[layerId].properties.shortName;
+                                   
+                                    //if(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name) == -1) {
+                                    //    trailsUnderCursor.push(trailData.trails[layerId].properties.name);
+                                    //}
+                                    //
+                                    //console.log(trailsUnderCursor.reduce( (acc, val) => acc.concat(val) ));
+                                    // 
+                                    //highlightTrail(trailData.trails[layerId].properties.trailId);
+                                    //
+                                    //if(trailsUnderCursor.length == 1) {
+                                    //    trailNamePopup.setHTML(trailsUnderCursor[0]);
+                                    //} else {
+                                    //    trailNamePopup.setHTML("• ".concat(trailsUnderCursor.join("<br>• ")));
+                                    //}
+                                    
+                                });
+                                
+                                map.on('mouseleave', 'wildfires', function() {
+                                    map.getCanvas().style.cursor = '';
+                                //    
+                                //    const trailId = trailData.trails[layerId].properties.trailId;
+                                //    
+                                //    if(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name) !== -1) {
+                                //        trailsUnderCursor.splice(trailsUnderCursor.indexOf(trailData.trails[layerId].properties.name), 1);
+                                //    }
+                                //        
+                                //    if(trailId !== trailIdOfActiveInfoPopup) {
+                                //        unhighlightTrail(trailData.trails[layerId].properties.trailId);
+                                //    }
+                                //
+                                    trailNamePopup.remove();
+                                });
+                            }
                             
                             function addTrailLayers(map, trailData) {
                                 $.each(trailData.trails, function(layerId, value) {
